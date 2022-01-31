@@ -4,14 +4,19 @@ from PIL import Image
 import torch.nn as nn
 import torchvision.models as models
 import torch.optim as optim
-from torchvision.utils import save_image
 from tqdm import tqdm
+from config import is_processing
+
 
 # # Loading the original and the style image
 # original_image = image_loader('house.png')
 # style_image = image_loader('Picasso.png')
 
-def return_image(original_image, style_image):
+def return_image(original_image_path, style_image_path):
+    print(is_processing)
+    is_processing.change(True)
+    print(is_processing)
+
     #Loadung the model vgg19 that will serve as the base model
     model=models.vgg19(pretrained=True).features
     #Assigning the GPU to the variable device
@@ -26,6 +31,9 @@ def return_image(original_image, style_image):
         image=loader(image).unsqueeze(0)
         return image.to(device,torch.float)
 
+    # # Loading the original and the style image
+    original_image = image_loader(original_image_path)
+    style_image = image_loader(style_image_path)
 
     #Creating the generated image from the original image
     generated_image=original_image.clone().requires_grad_(True)

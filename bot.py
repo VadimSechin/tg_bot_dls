@@ -1,11 +1,14 @@
 import telebot
 import config
 import dbworker
+from model import return_image
+from torchvision.utils import save_image
 
 bot = telebot.TeleBot(config.token)
 IS_PROCESSING = False
 
 id_images_dict = {}
+id_style_dict = {}
 
 # Начало диалога
 @bot.message_handler(commands=["start"])
@@ -39,13 +42,15 @@ def get_pic(message):
         with open("./images/" + got_image_name, 'wb') as new_file:
             new_file.write(downloaded_file)
 
-        id_images_dict[message.chat.id] = got_image_name
+        id_images_dict[message.chat.id] = './images/' + got_image_name
 
         bot.send_message(message.chat.id, "Изображение получено. Теперь отправьте изображение стиля")
         dbworker.set_state(message.chat.id, config.States.S_SEND_STYLE.value)
         print(id_images_dict)
+        print(id_style_dict)
     except:
         print("Error in get image")
+        bot.send_message(message.chat.id, "Что-то пошло не так :(")
 
 @bot.message_handler(content_types=["photo"],
                      func=lambda message: dbworker.get_current_state(message.chat.id) == config.States.S_SEND_STYLE.value)
@@ -58,14 +63,37 @@ def get_style(message):
         with open("./images/" + got_style_name, 'wb') as new_file:
             new_file.write(downloaded_file)
 
-        id_images_dict[message.chat.id] = got_style_name
+        id_style_dict[message.chat.id] = './images/' + got_style_name
 
         bot.send_message(message.chat.id, "Изображение стиля получено")
         bot.send_message(message.chat.id, "Идёт обработка... Это может занять несколько минут")
         dbworker.set_state(message.chat.id, config.States.S_PROCESSING.value)
         print(id_images_dict)
+        print(id_style_dict)
     except:
         print("Error in get style")
+        bot.send_message(message.chat.id, "Что-то пошло не так :(")
+    try:
+        print(1)
+        generated_image = return_image(
+            id_images_dict[message.chat.id],
+            id_style_dict[message.chat.id])
+        print(2)
+        save_image(generated_image, "./images/"+ str(message.chat.id) +".png")
+        print(3)
+
+        bot.send_photo(message.chat.id, open('./images/' + str(message.chat.id) + '.png', 'rb'))
+        print(4)
+        bot.send_message(message.chat.id,
+                         "Отлично! Больше от тебя ничего не требуется. Если захочешь пообщаться снова - "
+                         "отправь команду /start.")
+
+
+        dbworker.set_state(message.chat.id, config.States.S_START.value)
+    except:
+        print("error in processing")
+        bot.send_message(message.chat.id,"Что-то пошло не так :(")
+
 
 
 
