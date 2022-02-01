@@ -3,6 +3,7 @@ import config
 import dbworker
 from model import return_image
 from torchvision.utils import save_image
+import os
 
 bot = telebot.TeleBot(config.token)
 IS_PROCESSING = False
@@ -81,11 +82,14 @@ def get_style(message):
         print(2)
         save_image(generated_image, "./images/"+ str(message.chat.id) +".png")
         print(3)
-
+        bot.send_message(message.chat.id, "Вот ваш результат:")
         bot.send_photo(message.chat.id, open('./images/' + str(message.chat.id) + '.png', 'rb'))
         print(4)
+        path = os.path.join('./images/' + str(message.chat.id) + '.png')
+        os.remove(path)
+        print(5)
         bot.send_message(message.chat.id,
-                         "Отлично! Больше от тебя ничего не требуется. Если захочешь пообщаться снова - "
+                         "Отлично! Если захочешь пообщаться снова - "
                          "отправь команду /start.")
 
 
@@ -93,9 +97,5 @@ def get_style(message):
     except:
         print("error in processing")
         bot.send_message(message.chat.id,"Что-то пошло не так :(")
-
-
-
-
 
 bot.infinity_polling()

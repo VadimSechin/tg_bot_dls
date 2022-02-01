@@ -20,13 +20,13 @@ def return_image(original_image_path, style_image_path):
     #Loadung the model vgg19 that will serve as the base model
     model=models.vgg19(pretrained=True).features
     #Assigning the GPU to the variable device
-    device=torch.device("cuda" if (torch.cuda.is_available()) else 'cpu')
-
+    #device=torch.device("cuda" if (torch.cuda.is_available()) else 'cpu')
+    device = 'cpu'
     #defing a function that will load the image and perform the required preprocessing and put it on the GPU
     def image_loader(path):
         image=Image.open(path)
         #defining the image transformation steps to be performed before feeding them to the model
-        loader=transforms.Compose([transforms.Resize((64,64)), transforms.ToTensor()])
+        loader=transforms.Compose([transforms.Resize((256,256)), transforms.ToTensor()])
         #The preprocessing steps involves resizing the image and then converting it to a tensor
         image=loader(image).unsqueeze(0)
         return image.to(device,torch.float)
@@ -94,8 +94,8 @@ def return_image(original_image_path, style_image_path):
     model=VGG().to(device).eval()
 
     #initialize the paramerters required for fitting the model
-    epoch=500
-    lr=0.004
+    epoch=50
+    lr=0.005
     alpha=8
     beta=70
 
