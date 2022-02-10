@@ -97,7 +97,7 @@ def return_image(original_image_path, style_image_path):
     epoch=50
     lr=0.005
     alpha=8
-    beta=70
+    beta=7000
 
     #using adam optimizer and it will update the generated image not the model parameter
     optimizer=optim.Adam([generated_image],lr=lr)
