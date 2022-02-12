@@ -6,15 +6,19 @@ from torchvision.utils import save_image
 import os
 from random import randint
 from telebot import types
+from flask import Flask, request
 
-bot = telebot.TeleBot(config.token)
+TOKEN = config.token
+bot = telebot.TeleBot(TOKEN)
+server = Flask(__name__)
+
+
 IS_PROCESSING = False
 
 id_images_dict = {}
 id_style_dict = {}
 button_style_dict= {}
 
-# Начало диалога
 @bot.message_handler(commands=["start"])
 def cmd_start(message):
     state = dbworker.get_current_state(message.chat.id)
@@ -24,11 +28,10 @@ def cmd_start(message):
         bot.send_message(message.chat.id, "Отправьте изображение стиля")
     elif state == config.States.S_PROCESSING.value:
         bot.send_message(message.chat.id, "Идёт обработка. Ждите")
-    else:  # Под "остальным" понимаем состояние "0" - начало диалога
+    else:
         bot.send_message(message.chat.id, "Отправьте изображение, На которе хотите наложить стиль")
         dbworker.set_state(message.chat.id, config.States.S_SEND_PIC.value)
 
-# По команде /reset будем сбрасывать состояния, возвращаясь к началу диалога
 @bot.message_handler(commands=["reset"])
 def cmd_reset(message):
     bot.send_message(message.chat.id, "Отправьте изображение, На которе хотите наложить стиль")
@@ -39,15 +42,13 @@ def choose_style_bttn():
     one = types.InlineKeyboardButton('Пикассо', callback_data='1')
     two = types.InlineKeyboardButton('Лунная ночь Ван Гог', callback_data='2')
     three = types.InlineKeyboardButton('Свой стиль', callback_data='3')
-    # и так далее либо же сделать через цикл for, но у каждой кнопки должен быть свой callback
     keyboard.add(one, two, three)
     return keyboard
 
 def accept_style_bttn():
-    keyboard = types.InlineKeyboardMarkup(row_width=1)  # вывод кнопок в 1 колонку
+    keyboard = types.InlineKeyboardMarkup(row_width=1)
     one = types.InlineKeyboardButton('Хочу этот', callback_data='4')
     two = types.InlineKeyboardButton('Выбрать другой стиль', callback_data='5')
-    # и так далее либо же сделать через цикл for, но у каждой кнопки должен быть свой callback
     keyboard.add(one, two)
     return keyboard
 
@@ -65,18 +66,9 @@ def get_pic(message):
     id_images_dict[message.chat.id] = './images/' + got_image_name
 
     bot.send_message(message.chat.id, "Изображение получено")
-    # dbworker.set_state(message.chat.id, config.States.S_SEND_STYLE.value)
-    print(id_images_dict)
-    print(id_style_dict)
 
     keyboard = choose_style_bttn()
     bot.send_message(message.chat.id, 'Выберете стиль, который хотите наложить', reply_markup=keyboard)
-    print(message.chat.id)
-    # except:
-    #     print("Error in get image")
-    #     bot.send_message(message.chat.id, "Что-то пошло не так :(")
-
-
 
 @bot.callback_query_handler(func=lambda call: True)
 def logic_inline(call):
@@ -99,10 +91,9 @@ def logic_inline(call):
             bot.send_message(call.message.chat.id, 'Пришлите изображение стиля')
             dbworker.set_state(call.message.chat.id, config.States.S_SEND_STYLE.value)
             print(call.message.chat.id)
-            dbworker.set_state(call.message.chat.id, config.States.S_START.value)
         elif call.data == '4':
             dbworker.set_state(call.message.chat.id, config.States.S_SEND_STYLE.value)
-            make_resukt_pic(call.message.chat.id)
+            make_result_pic(call.message.chat.id)
             dbworker.set_state(call.message.chat.id, config.States.S_START.value)
         elif call.data == '5':
             bot.delete_message(call.message.chat.id, call.message.id)
@@ -114,43 +105,50 @@ def logic_inline(call):
 @bot.message_handler(content_types=["photo"],
                    func=lambda message: dbworker.get_current_state(message.chat.id) == config.States.S_SEND_STYLE.value)
 def get_style(message):
+    print('akakakakakaakakakakk')
     raw = message.photo[-1].file_id
     got_style_name = raw + ".jpg"
     file_info = bot.get_file(raw)
     downloaded_file = bot.download_file(file_info.file_path)
     with open("./images/" + got_style_name, 'wb') as new_file:
-      new_file.write(downloaded_file)
+        new_file.write(downloaded_file)
 
     id_style_dict[message.chat.id] = './images/' + got_style_name
-    make_resukt_pic(message.chat.id)
+    make_result_pic(message.chat.id)
 
 
-def make_resukt_pic(id):
+def make_result_pic(id):
     random = randint(1, 9999999)
     bot.send_message(id, "Изображение стиля получено")
     bot.send_message(id, "Идёт обработка... Это может занять несколько минут")
     dbworker.set_state(id, config.States.S_PROCESSING.value)
-    print(id_images_dict)
-    print(id_style_dict)
 
-    print(1)
     generated_image = return_image(
       id_images_dict[id],
       id_style_dict[id])
-    print(2)
     save_image(generated_image, "./images/" + str(random) + str(id) + ".png")
-    print(3)
     bot.send_message(id, "Вот ваш результат:")
     bot.send_photo(id, open('./images/' + str(random) + str(id) + '.png', 'rb'))
-    print(4)
     path = os.path.join('./images/' + str(random) + str(id) + '.png')
     os.remove(path)
-    print(5)
     bot.send_message(id,
-                   "Отлично! Если захочешь пообщаться снова - "
-                   "отправь команду /start.")
-
+                   "Отлично! Если захочешь пообщаться снова - отправь команду /start.")
     dbworker.set_state(id, config.States.S_START.value)
 
+@server.route('/' + TOKEN, methods=['POST'])
+def getMessage():
+    json_string = request.get_data().decode('utf-8')
+    update = telebot.types.Update.de_json(json_string)
+    bot.process_new_updates([update])
+    return "!", 200
 
-bot.infinity_polling()
+
+@server.route("/")
+def webhook():
+    bot.remove_webhook()
+    bot.set_webhook(url='https://polar-tor-49578.herokuapp.com/' + TOKEN)
+    return "!", 200
+
+
+if __name__ == "__main__":
+    server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))

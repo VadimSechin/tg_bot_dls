@@ -7,11 +7,6 @@ import torch.optim as optim
 from tqdm import tqdm
 from config import is_processing
 
-
-# # Loading the original and the style image
-# original_image = image_loader('house.png')
-# style_image = image_loader('Picasso.png')
-
 def return_image(original_image_path, style_image_path):
     print(is_processing)
     is_processing.change(True)
