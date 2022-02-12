@@ -56,7 +56,7 @@ def accept_style_bttn():
 @bot.message_handler(content_types=["photo"],
                      func=lambda message: dbworker.get_current_state(message.chat.id) == config.States.S_SEND_PIC.value)
 def get_pic(message):
-
+    bot.send_message(message.chat.id, "фбфбфбффбфб")
     raw = message.photo[-1].file_id
     print(raw)
     got_image_name = raw + ".jpg"
