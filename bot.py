@@ -35,6 +35,7 @@ def cmd_start(message):
 @bot.message_handler(commands=["reset"])
 def cmd_reset(message):
     bot.send_message(message.chat.id, "Отправьте изображение, На которе хотите наложить стиль")
+    bot.send_photo(message.chat.id, open('./default_styles/' + 'PICASSO.jpg', 'rb'))
     dbworker.set_state(message.chat.id, config.States.S_SEND_PIC.value)
 
 def choose_style_bttn():
@@ -61,10 +62,10 @@ def get_pic(message):
     got_image_name = raw + ".jpg"
     file_info = bot.get_file(raw)
     downloaded_file = bot.download_file(file_info.file_path)
-    with open("app/images/" + got_image_name, 'wb') as new_file:
+    with open("./images/" + got_image_name, 'wb') as new_file:
         new_file.write(downloaded_file)
 
-    id_images_dict[message.chat.id] = 'app/images/' + got_image_name
+    id_images_dict[message.chat.id] = './images/' + got_image_name
 
     bot.send_message(message.chat.id, "Изображение получено")
 
