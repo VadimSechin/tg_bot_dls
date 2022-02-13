@@ -163,8 +163,8 @@ def make_result_pic(id):
     # dbworker.set_state(id, config.States.S_START.value)
 
 
-# bot.remove_webhook()
-# bot.polling(none_stop=True, interval=0, timeout=50)
+bot.remove_webhook()
+bot.polling(none_stop=True, interval=0, timeout=50)
 
 
 
