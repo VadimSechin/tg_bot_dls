@@ -26,7 +26,7 @@ def return_image(original_image, style_image_path):
     class VGG(nn.Module):
         def __init__(self):
             super(VGG, self).__init__()
-            self.req_features = ['0', '2', '4', '5']
+            self.req_features = ['0', '1', '2', '3']
             self.model = torch.load('model.pth')
 
         def forward(self, x):
