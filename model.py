@@ -26,7 +26,7 @@ def return_image(original_image, style_image_path):
     class VGG(nn.Module):
         def __init__(self):
             super(VGG, self).__init__()
-            self.req_features = ['0', '1', '2', '3']
+            self.req_features = ['0', '1', '2']
             self.model = torch.load('model.pth')
 
         def forward(self, x):
@@ -60,7 +60,7 @@ def return_image(original_image, style_image_path):
 
     model=VGG().to(device).eval()
 
-    epoch=10
+    epoch=70
     lr=0.005
     alpha=8
     beta=7000
@@ -76,7 +76,7 @@ def return_image(original_image, style_image_path):
         total_loss.backward()
         optimizer.step()
 
-    return generated_image.detach()
+    return generated_image
 
 
 
