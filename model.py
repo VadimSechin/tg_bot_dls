@@ -49,9 +49,9 @@ def return_image(original_image, style_image_path, bot, id):
         style_l = torch.mean((G - A) ** 2)
         return style_l
 
-    def calculate_loss(gen_features, orig_feautes, style_featues):
+    def calculate_loss(gen_features, orig_features, style_features):
         style_loss = content_loss = 0
-        for gen, cont, style in zip(gen_features, orig_feautes, style_featues):
+        for gen, cont, style in zip(gen_features, orig_features, style_features):
             content_loss += calc_content_loss(gen, cont)
             style_loss += calc_style_loss(gen, style)
 

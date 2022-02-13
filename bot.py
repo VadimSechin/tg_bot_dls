@@ -4,7 +4,6 @@ import dbworker
 from model import return_image
 from torchvision.utils import save_image
 import os
-from random import randint
 from telebot import types
 from flask import Flask, request
 import numpy
@@ -15,7 +14,6 @@ from PIL import Image
 TOKEN = config.token
 bot = telebot.TeleBot(TOKEN)
 # server = Flask(__name__)
-
 
 IS_PROCESSING = False
 
@@ -28,26 +26,26 @@ button_style_dict = {}
 def cmd_start(message):
     state = dbworker.get_current_state(message.chat.id)
     if state == config.States.S_SEND_PIC.value:
-        bot.send_message(message.chat.id, "Отправьте изображение, На которе хотите наложить стиль")
+        bot.send_message(message.chat.id, "Отправь изображение, на которе нужно наложить стиль")
     elif state == config.States.S_SEND_STYLE.value:
-        bot.send_message(message.chat.id, "Отправьте изображение стиля")
+        bot.send_message(message.chat.id, "Отправь изображение стиля")
     elif state == config.States.S_PROCESSING.value:
-        bot.send_message(message.chat.id, "Идёт обработка. Ждите")
+        bot.send_message(message.chat.id, "Идёт обработка. Нужно немного подождать :(")
     else:
-        bot.send_message(message.chat.id, "Отправьте изображение, На которе хотите наложить стиль")
+        bot.send_message(message.chat.id, "Отправь изображение, на которе нужно наложить стиль")
         dbworker.set_state(message.chat.id, config.States.S_SEND_PIC.value)
 
 
 @bot.message_handler(commands=["reset"])
 def cmd_reset(message):
-    bot.send_message(message.chat.id, "Отправьте изображение, На которе хотите наложить стиль")
+    bot.send_message(message.chat.id, "Отправь изображение, на которе нужно наложить стиль")
     dbworker.set_state(message.chat.id, config.States.S_SEND_PIC.value)
 
 
 def choose_style_bttn():
     keyboard = types.InlineKeyboardMarkup(row_width=1)  # вывод кнопок в 1 колонку
-    one = types.InlineKeyboardButton('Пикассо', callback_data='1')
-    two = types.InlineKeyboardButton('Лунная ночь Ван Гог', callback_data='2')
+    one = types.InlineKeyboardButton('В стиле Пикассо', callback_data='1')
+    two = types.InlineKeyboardButton('В стиле "Лунной ночи" Ван Гога', callback_data='2')
     three = types.InlineKeyboardButton('Свой стиль', callback_data='3')
     keyboard.add(one, two, three)
     return keyboard
@@ -77,7 +75,7 @@ def get_pic(message):
         bot.send_message(message.chat.id, "Изображение получено")
 
         keyboard = choose_style_bttn()
-        bot.send_message(message.chat.id, 'Выберете стиль, который хотите наложить', reply_markup=keyboard)
+        bot.send_message(message.chat.id, 'Выбери стиль, который наложить', reply_markup=keyboard)
     except:
         bot.send_message(message.chat.id, 'Упс, что-то пошло не так... Жми /reset')
 
@@ -93,7 +91,7 @@ def logic_inline(call):
                 imgarr = numpy.array(img)
 
                 id_style_dict[call.message.chat.id] = imgarr
-                bot.send_message(call.message.chat.id, 'Пойдёт?', reply_markup=keyboard)
+                bot.send_message(call.message.chat.id, 'Подойдёт стиль?', reply_markup=keyboard)
 
             elif call.data == '2':
                 keyboard = accept_style_bttn()
@@ -102,7 +100,7 @@ def logic_inline(call):
                 imgarr = numpy.array(img)
 
                 id_style_dict[call.message.chat.id] = imgarr
-                bot.send_message(call.message.chat.id, 'Пойдёт?', reply_markup=keyboard)
+                bot.send_message(call.message.chat.id, 'Подойдёт стиль?', reply_markup=keyboard)
 
             elif call.data == '3':
                 bot.send_message(call.message.chat.id, 'Пришлите изображение стиля')
@@ -145,19 +143,18 @@ def make_result_pic(id):
 
         generated_image = return_image(id_images_dict[id], id_style_dict[id], bot, id)
         save_image(generated_image, "./images/" + str(id) + ".png")
-        bot.send_message(id, "Вот ваш результат:")
+        bot.send_message(id, "Держи результат :) ")
         bot.send_photo(id, open('./images/' + str(id) + '.png', 'rb'))
         path = os.path.join('./images/' + str(id) + '.png')
         os.remove(path)
-        bot.send_message(id,
-                         "Отлично! Если захочешь пообщаться снова - отправь команду /start.")
+        bot.send_message(id, "Если захочешь пообщаться снова - отправь команду /start.")
         dbworker.set_state(id, config.States.S_START.value)
     except:
         bot.send_message(id, 'Упс, что-то пошло не так... Жми /reset')
 
 
 bot.remove_webhook()
-bot.polling(none_stop=True, interval=0, timeout=100)
+bot.polling(none_stop=True, interval=0, timeout=200)
 
 # @server.route('/' + TOKEN, methods=['POST'])
 # def getMessage():
