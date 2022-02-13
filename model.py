@@ -6,7 +6,7 @@ import torch.optim as optim
 from tqdm import tqdm
 from config import is_processing
 
-def return_image(original_image, style_image_path):
+def return_image(original_image, style_image_path, bot, id):
     is_processing.change(True)
     print('is processing: ', is_processing)
 
@@ -75,6 +75,8 @@ def return_image(original_image, style_image_path):
         optimizer.zero_grad()
         total_loss.backward()
         optimizer.step()
+        if e % (epoch // 10) == 0:
+            bot.send_message(id, "Готово:" + str(e // (epoch // 10)*10) + " %")
 
     return generated_image
 

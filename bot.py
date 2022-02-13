@@ -128,7 +128,7 @@ def make_result_pic(id):
     bot.send_message(id, "Идёт обработка... Это может занять несколько минут")
     dbworker.set_state(id, config.States.S_PROCESSING.value)
 
-    generated_image = return_image(id_images_dict[id], id_style_dict[id])
+    generated_image = return_image(id_images_dict[id], id_style_dict[id], bot, id)
     save_image(generated_image, "./images/" + str(random) + str(id) + ".png")
     bot.send_message(id, "Вот ваш результат:")
     bot.send_photo(id, open('./images/' + str(random) + str(id) + '.png', 'rb'))
@@ -137,31 +137,6 @@ def make_result_pic(id):
     bot.send_message(id,
                      "Отлично! Если захочешь пообщаться снова - отправь команду /start.")
     dbworker.set_state(id, config.States.S_START.value)
-    # print(generated_image)
-    # print(generated_image.shape)
-    # image = Image.fromarray(generated_image * 255, "RGB")
-    # i = image.save('./images/aa.png')
-    # print(image)
-    #
-    # # save_image(image, "./images/" + str(random) + str(id) + ".png")
-    # bot.send_message(id, "Вот ваш результат:")
-    # bot.send_photo(id, open('./images/aa.png', 'rb'))
-    # path = os.path.join('./images/' + str(random) + str(id) + '.png')
-    # os.remove(path)
-
-    # print(generated_image)
-    # print(generated_image.shape)
-    # image = Image.fromarray(generated_image*255, "RGB")
-    # image.show()
-    # save_image(generated_image, "./images/" + str(random) + str(id) + ".png")
-    # bot.send_message(id, "Вот ваш результат:")
-    # bot.send_photo(id, open('./images/' + str(random) + str(id) + '.png', 'rb'))
-    # # bot.send_photo(id, image)
-    # path = os.path.join('./images/' + str(random) + str(id) + '.png')
-    # os.remove(path)
-    # bot.send_message(id, "Отлично! Если захочешь пообщаться снова - отправь команду /start.")
-    # dbworker.set_state(id, config.States.S_START.value)
-
 
 bot.remove_webhook()
 bot.polling(none_stop=True, interval=0, timeout=100)
