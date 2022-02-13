@@ -7,7 +7,7 @@ import torch.optim as optim
 from tqdm import tqdm
 from config import is_processing
 
-def return_image(original_image_path, style_image_path):
+def return_image(original_image, style_image_path):
     print(is_processing)
     is_processing.change(True)
     print(is_processing)
@@ -18,8 +18,8 @@ def return_image(original_image_path, style_image_path):
     #device=torch.device("cuda" if (torch.cuda.is_available()) else 'cpu')
     device = 'cpu'
     #defing a function that will load the image and perform the required preprocessing and put it on the GPU
-    def image_loader(path):
-        image=Image.open(path)
+    def image_loader(image):
+        image=Image.open(image)
         #defining the image transformation steps to be performed before feeding them to the model
         loader=transforms.Compose([transforms.Resize((256,256)), transforms.ToTensor()])
         #The preprocessing steps involves resizing the image and then converting it to a tensor
@@ -27,7 +27,7 @@ def return_image(original_image_path, style_image_path):
         return image.to(device,torch.float)
 
     # # Loading the original and the style image
-    original_image = image_loader(original_image_path)
+    original_image = image_loader(original_image)
     style_image = image_loader(style_image_path)
 
     #Creating the generated image from the original image
