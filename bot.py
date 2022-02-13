@@ -164,7 +164,7 @@ def make_result_pic(id):
 
 
 bot.remove_webhook()
-bot.polling(none_stop=True, interval=0, timeout=50)
+bot.polling(none_stop=True, interval=0, timeout=100)
 
 
 
