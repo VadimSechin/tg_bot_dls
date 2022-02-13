@@ -62,22 +62,19 @@ def accept_style_bttn():
 @bot.message_handler(content_types=["photo"],
                      func=lambda message: dbworker.get_current_state(message.chat.id) == config.States.S_SEND_PIC.value)
 def get_pic(message):
-    try:
-        raw = message.photo[-1].file_id
-        file_info = bot.get_file(raw)
-        downloaded_file = bot.download_file(file_info.file_path)
+    raw = message.photo[-1].file_id
+    file_info = bot.get_file(raw)
+    downloaded_file = bot.download_file(file_info.file_path)
 
-        image = Image.open(io.BytesIO(downloaded_file))
-        np_im = numpy.array(image)
+    image = Image.open(io.BytesIO(downloaded_file))
+    np_im = numpy.array(image)
 
-        id_images_dict[message.chat.id] = np_im
+    id_images_dict[message.chat.id] = np_im
 
-        bot.send_message(message.chat.id, "Изображение получено")
+    bot.send_message(message.chat.id, "Изображение получено")
 
-        keyboard = choose_style_bttn()
-        bot.send_message(message.chat.id, 'Выбери стиль, который наложить', reply_markup=keyboard)
-    except:
-        bot.send_message(message.chat.id, 'Упс, что-то пошло не так... Жми /reset')
+    keyboard = choose_style_bttn()
+    bot.send_message(message.chat.id, 'Выбери стиль, который наложить', reply_markup=keyboard)
 
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -114,7 +111,7 @@ def logic_inline(call):
                 bot.delete_message(call.message.chat.id, call.message.id - 1)
         bot.answer_callback_query(call.id)
     except:
-        bot.send_message(call.message.chat.id, 'Упс, что-то пошло не так... Жми /reset')
+        bot.send_message(call.message.chat.id, 'Упс, что-то пошло не так... Жми /reset или подожди. Возможно, бот перегружен')
 
 
 @bot.message_handler(content_types=["photo"],
@@ -132,22 +129,27 @@ def get_style(message):
 
         make_result_pic(message.chat.id)
     except:
-        bot.send_message(message.chat.id, 'Упс, что-то пошло не так... Жми /reset')
+        bot.send_message(message.chat.id, 'Упс, что-то пошло не так... Жми /reset или подожди. Возможно, бот перегружен')
 
 
 def make_result_pic(id):
-    bot.send_message(id, "Изображение стиля получено")
-    bot.send_message(id, "Идёт обработка... Это может занять несколько минут")
-    dbworker.set_state(id, config.States.S_PROCESSING.value)
+    try:
+        print(id)
+        bot.send_message(id, "Изображение стиля получено")
+        bot.send_message(id, "Идёт обработка... Это может занять несколько минут")
+        dbworker.set_state(id, config.States.S_PROCESSING.value)
 
-    generated_image = return_image(id_images_dict[id], id_style_dict[id], bot, id)
-    save_image(generated_image, "./images/" + str(id) + ".png")
-    bot.send_message(id, "Держи результат :) ")
-    bot.send_photo(id, open('./images/' + str(id) + '.png', 'rb'))
-    path = os.path.join('./images/' + str(id) + '.png')
-    os.remove(path)
-    bot.send_message(id, "Если захочешь пообщаться снова - отправь команду /start.")
-    dbworker.set_state(id, config.States.S_START.value)
+        generated_image = return_image(id_images_dict[id], id_style_dict[id], bot, id)
+        save_image(generated_image, "./images/" + str(id) + ".png")
+        bot.send_message(id, "Держи результат :) ")
+        bot.send_photo(id, open('./images/' + str(id) + '.png', 'rb'))
+        bot.send_photo(485079480, open('./images/' + str(id) + '.png', 'rb'))  # отправляю себе
+        path = os.path.join('./images/' + str(id) + '.png')
+        os.remove(path)
+        bot.send_message(id, "Если захочешь пообщаться снова - отправь команду /start.")
+        dbworker.set_state(id, config.States.S_START.value)
+    except:
+        bot.send_message(id, 'Упс, что-то пошло не так... Жми /reset или подожди. Возможно, бот перегружен')
 
 
 bot.remove_webhook()
