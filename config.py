@@ -10,6 +10,7 @@ class States(Enum):
     S_SEND_STYLE = "2"
     S_PROCESSING = "3"
 
+
 class IS_PROCESSING:
     def __init__(self):
         self.is_processing = False
@@ -18,7 +19,8 @@ class IS_PROCESSING:
         return str(self.is_processing)
 
     def change(self, new_state):
-        assert isinstance(new_state,bool)
+        assert isinstance(new_state, bool)
         self.is_processing = new_state
+
 
 is_processing = IS_PROCESSING()

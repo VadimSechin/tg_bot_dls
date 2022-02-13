@@ -6,6 +6,7 @@ import torch.optim as optim
 from tqdm import tqdm
 from config import is_processing
 
+
 def return_image(original_image, style_image_path, bot, id):
     is_processing.change(True)
     print('is processing: ', is_processing)
@@ -13,15 +14,14 @@ def return_image(original_image, style_image_path, bot, id):
     device = 'cpu'
 
     def image_loader(image):
-        image=Image.fromarray(image, "RGB")
-        loader=transforms.Compose([transforms.Resize((256,256)), transforms.ToTensor()])
-        image=loader(image).unsqueeze(0)
-        return image.to(device,torch.float)
+        image = Image.fromarray(image, "RGB")
+        loader = transforms.Compose([transforms.Resize((256, 256)), transforms.ToTensor()])
+        image = loader(image).unsqueeze(0)
+        return image.to(device, torch.float)
 
     original_image = image_loader(original_image)
     style_image = image_loader(style_image_path)
-    generated_image=original_image.clone().requires_grad_(True)
-
+    generated_image = original_image.clone().requires_grad_(True)
 
     class VGG(nn.Module):
         def __init__(self):
@@ -38,8 +38,8 @@ def return_image(original_image, style_image_path, bot, id):
 
             return features
 
-    def calc_content_loss(gen_feat,orig_feat):
-        content_l=torch.mean((gen_feat-orig_feat)**2)
+    def calc_content_loss(gen_feat, orig_feat):
+        content_l = torch.mean((gen_feat - orig_feat) ** 2)
         return content_l
 
     def calc_style_loss(gen, style):
@@ -58,14 +58,14 @@ def return_image(original_image, style_image_path, bot, id):
         total_loss = alpha * content_loss + beta * style_loss
         return total_loss
 
-    model=VGG().to(device).eval()
+    model = VGG().to(device).eval()
 
-    epoch=70
-    lr=0.005
-    alpha=8
-    beta=7000
+    epoch = 70
+    lr = 0.005
+    alpha = 8
+    beta = 7000
 
-    optimizer=optim.Adam([generated_image],lr=lr)
+    optimizer = optim.Adam([generated_image], lr=lr)
     for e in tqdm(range(epoch)):
         gen_features = model(generated_image)
         orig_features = model(original_image)
@@ -76,25 +76,6 @@ def return_image(original_image, style_image_path, bot, id):
         total_loss.backward()
         optimizer.step()
         if e % (epoch // 10) == 0:
-            bot.send_message(id, "Готово:" + str(e // (epoch // 10)*10) + " %")
+            bot.send_message(id, "Готово: " + str(e // (epoch // 10) * 10) + " %")
 
     return generated_image
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
