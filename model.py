@@ -6,6 +6,9 @@ import torchvision.models as models
 import torch.optim as optim
 from tqdm import tqdm
 from config import is_processing
+from matplotlib import cm
+import numpy
+
 
 def return_image(original_image, style_image_path):
     print(is_processing)
@@ -19,7 +22,7 @@ def return_image(original_image, style_image_path):
     device = 'cpu'
     #defing a function that will load the image and perform the required preprocessing and put it on the GPU
     def image_loader(image):
-        image=Image.open(image)
+        image=Image.fromarray(image, "RGB")
         #defining the image transformation steps to be performed before feeding them to the model
         loader=transforms.Compose([transforms.Resize((256,256)), transforms.ToTensor()])
         #The preprocessing steps involves resizing the image and then converting it to a tensor

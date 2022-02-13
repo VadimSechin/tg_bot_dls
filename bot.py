@@ -69,8 +69,6 @@ def get_pic(message):
     np_im = numpy.array(image)
     print(np_im.shape)
     print(np_im[0])
-    # with open("./images/" + got_image_name, 'wb') as new_file:
-    #     new_file.write(downloaded_file)
 
     id_images_dict[message.chat.id] = np_im
     bot.send_message(message.chat.id, "Изображение получено")
@@ -84,8 +82,9 @@ def logic_inline(call):
         if call.data == '1':
             keyboard = accept_style_bttn()
             bot.send_photo(call.message.chat.id, open('./default_styles/' + 'PICASSO.jpg', 'rb'))
-            img = PIL.Image.open('./default_styles/' + 'PICASSO.jpg').convert("L")
+            img = PIL.Image.open('./default_styles/' + 'PICASSO.jpg')
             imgarr = numpy.array(img)
+            print(imgarr.shape)
             id_style_dict[call.message.chat.id] = imgarr
             bot.send_message(call.message.chat.id, 'Пойдёт?', reply_markup=keyboard)
             print(id_images_dict)
@@ -120,8 +119,6 @@ def get_style(message):
     got_style_name = raw + ".jpg"
     file_info = bot.get_file(raw)
     downloaded_file = bot.download_file(file_info.file_path)
-    # with open("./images/" + got_style_name, 'wb') as new_file:
-    #     new_file.write(downloaded_file)
 
     id_style_dict[message.chat.id] = downloaded_file
     make_result_pic(message.chat.id)
@@ -145,7 +142,7 @@ def make_result_pic(id):
                    "Отлично! Если захочешь пообщаться снова - отправь команду /start.")
     dbworker.set_state(id, config.States.S_START.value)
 bot.remove_webhook()
-bot.polling(none_stop=True)
+bot.polling(none_stop=True, interval=0, timeout=50)
 
 
 #
