@@ -60,7 +60,7 @@ def return_image(original_image, style_image_path, bot, id):
 
     model = VGG().to(device).eval()
 
-    epoch = 150
+    epoch = 80
     lr = 0.005
     alpha = 8
     beta = 7000
