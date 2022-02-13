@@ -14,7 +14,7 @@ from PIL import Image
 
 TOKEN = config.token
 bot = telebot.TeleBot(TOKEN)
-server = Flask(__name__)
+# server = Flask(__name__)
 
 
 IS_PROCESSING = False
@@ -144,26 +144,26 @@ def make_result_pic(id):
     dbworker.set_state(id, config.States.S_START.value)
 
 
-# bot.remove_webhook()
-# bot.polling(none_stop=True, interval=0, timeout=50)
+bot.remove_webhook()
+bot.polling(none_stop=True, interval=0, timeout=50)
 
 
-
-@server.route('/' + TOKEN, methods=['POST'])
-def getMessage():
-    json_string = request.get_data().decode('utf-8')
-    update = telebot.types.Update.de_json(json_string)
-    bot.process_new_updates([update])
-    return "!", 200
-
-
-@server.route("/")
-def webhook():
-    bot.remove_webhook()
-    bot.set_webhook(url='https://polar-tor-49578.herokuapp.com/' + TOKEN)
-    #bot.set_webhook(url='http://192.168.43.124:5000/' + TOKEN)
-    return "!", 200
-
-
-if __name__ == "__main__":
-    server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
+#
+# @server.route('/' + TOKEN, methods=['POST'])
+# def getMessage():
+#     json_string = request.get_data().decode('utf-8')
+#     update = telebot.types.Update.de_json(json_string)
+#     bot.process_new_updates([update])
+#     return "!", 200
+#
+#
+# @server.route("/")
+# def webhook():
+#     bot.remove_webhook()
+#     bot.set_webhook(url='https://polar-tor-49578.herokuapp.com/' + TOKEN)
+#     #bot.set_webhook(url='http://192.168.43.124:5000/' + TOKEN)
+#     return "!", 200
+#
+#
+# if __name__ == "__main__":
+#     server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
