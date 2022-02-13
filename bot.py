@@ -136,21 +136,18 @@ def get_style(message):
 
 
 def make_result_pic(id):
-    try:
-        bot.send_message(id, "Изображение стиля получено")
-        bot.send_message(id, "Идёт обработка... Это может занять несколько минут")
-        dbworker.set_state(id, config.States.S_PROCESSING.value)
+    bot.send_message(id, "Изображение стиля получено")
+    bot.send_message(id, "Идёт обработка... Это может занять несколько минут")
+    dbworker.set_state(id, config.States.S_PROCESSING.value)
 
-        generated_image = return_image(id_images_dict[id], id_style_dict[id], bot, id)
-        save_image(generated_image, "./images/" + str(id) + ".png")
-        bot.send_message(id, "Держи результат :) ")
-        bot.send_photo(id, open('./images/' + str(id) + '.png', 'rb'))
-        path = os.path.join('./images/' + str(id) + '.png')
-        os.remove(path)
-        bot.send_message(id, "Если захочешь пообщаться снова - отправь команду /start.")
-        dbworker.set_state(id, config.States.S_START.value)
-    except:
-        bot.send_message(id, 'Упс, что-то пошло не так... Жми /reset')
+    generated_image = return_image(id_images_dict[id], id_style_dict[id], bot, id)
+    save_image(generated_image, "./images/" + str(id) + ".png")
+    bot.send_message(id, "Держи результат :) ")
+    bot.send_photo(id, open('./images/' + str(id) + '.png', 'rb'))
+    path = os.path.join('./images/' + str(id) + '.png')
+    os.remove(path)
+    bot.send_message(id, "Если захочешь пообщаться снова - отправь команду /start.")
+    dbworker.set_state(id, config.States.S_START.value)
 
 
 bot.remove_webhook()
