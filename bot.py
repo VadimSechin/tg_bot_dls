@@ -14,7 +14,7 @@ from PIL import Image
 
 TOKEN = config.token
 bot = telebot.TeleBot(TOKEN)
-# server = Flask(__name__)
+server = Flask(__name__)
 
 
 IS_PROCESSING = False
@@ -60,17 +60,14 @@ def accept_style_bttn():
                      func=lambda message: dbworker.get_current_state(message.chat.id) == config.States.S_SEND_PIC.value)
 def get_pic(message):
     raw = message.photo[-1].file_id
-    print(raw)
-    got_image_name = raw + ".png"
     file_info = bot.get_file(raw)
     downloaded_file = bot.download_file(file_info.file_path)
 
     image = Image.open(io.BytesIO(downloaded_file))
     np_im = numpy.array(image)
-    print(np_im.shape)
-    print(np_im[0])
 
     id_images_dict[message.chat.id] = np_im
+
     bot.send_message(message.chat.id, "Изображение получено")
 
     keyboard = choose_style_bttn()
@@ -84,22 +81,22 @@ def logic_inline(call):
             bot.send_photo(call.message.chat.id, open('./default_styles/' + 'PICASSO.jpg', 'rb'))
             img = PIL.Image.open('./default_styles/' + 'PICASSO.jpg')
             imgarr = numpy.array(img)
-            print(imgarr.shape)
+
             id_style_dict[call.message.chat.id] = imgarr
             bot.send_message(call.message.chat.id, 'Пойдёт?', reply_markup=keyboard)
-            print(id_images_dict)
-            print(id_style_dict)
+
         elif call.data == '2':
             keyboard = accept_style_bttn()
             bot.send_photo(call.message.chat.id, open('./default_styles/' + 'VG_MN.jpg', 'rb'))
-            id_style_dict[call.message.chat.id] = './default_styles/' + 'VG_MN.jpg'
+            img = PIL.Image.open('./default_styles/' + 'VG_MN.jpg')
+            imgarr = numpy.array(img)
+
+            id_style_dict[call.message.chat.id] = imgarr
             bot.send_message(call.message.chat.id, 'Пойдёт?', reply_markup=keyboard)
-            print(id_images_dict)
-            print(id_style_dict)
+
         elif call.data == '3':
             bot.send_message(call.message.chat.id, 'Пришлите изображение стиля')
             dbworker.set_state(call.message.chat.id, config.States.S_SEND_STYLE.value)
-            print(call.message.chat.id)
         elif call.data == '4':
             dbworker.set_state(call.message.chat.id, config.States.S_SEND_STYLE.value)
             make_result_pic(call.message.chat.id)
@@ -114,13 +111,14 @@ def logic_inline(call):
 @bot.message_handler(content_types=["photo"],
                    func=lambda message: dbworker.get_current_state(message.chat.id) == config.States.S_SEND_STYLE.value)
 def get_style(message):
-    print('akakakakakaakakakakk')
     raw = message.photo[-1].file_id
-    got_style_name = raw + ".jpg"
     file_info = bot.get_file(raw)
     downloaded_file = bot.download_file(file_info.file_path)
+    image = Image.open(io.BytesIO(downloaded_file))
+    np_im = numpy.array(image)
 
-    id_style_dict[message.chat.id] = downloaded_file
+    id_style_dict[message.chat.id] = np_im
+
     make_result_pic(message.chat.id)
 
 
@@ -130,37 +128,42 @@ def make_result_pic(id):
     bot.send_message(id, "Идёт обработка... Это может занять несколько минут")
     dbworker.set_state(id, config.States.S_PROCESSING.value)
 
-    generated_image = return_image(
-      id_images_dict[id],
-      id_style_dict[id])
+    generated_image = return_image(id_images_dict[id], id_style_dict[id])
+    generated_image = generated_image.numpy()[0]
+    print(generated_image)
+    print(generated_image.shape)
+    image = Image.fromarray(generated_image*255, "RGB")
+    image.show()
     save_image(generated_image, "./images/" + str(random) + str(id) + ".png")
     bot.send_message(id, "Вот ваш результат:")
     bot.send_photo(id, open('./images/' + str(random) + str(id) + '.png', 'rb'))
+    # bot.send_photo(id, image)
     path = os.path.join('./images/' + str(random) + str(id) + '.png')
     os.remove(path)
-    bot.send_message(id,
-                   "Отлично! Если захочешь пообщаться снова - отправь команду /start.")
+    bot.send_message(id, "Отлично! Если захочешь пообщаться снова - отправь команду /start.")
     dbworker.set_state(id, config.States.S_START.value)
-bot.remove_webhook()
-bot.polling(none_stop=True, interval=0, timeout=50)
 
 
-#
-# @server.route('/' + TOKEN, methods=['POST'])
-# def getMessage():
-#     json_string = request.get_data().decode('utf-8')
-#     update = telebot.types.Update.de_json(json_string)
-#     bot.process_new_updates([update])
-#     return "!", 200
-#
-#
-# @server.route("/")
-# def webhook():
-#     bot.remove_webhook()
-#     bot.set_webhook(url='https://polar-tor-49578.herokuapp.com/' + TOKEN)
-#     #bot.set_webhook(url='http://192.168.43.124:5000/' + TOKEN)
-#     return "!", 200
-#
-#
-# if __name__ == "__main__":
-#     server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
+# bot.remove_webhook()
+# bot.polling(none_stop=True, interval=0, timeout=50)
+
+
+
+@server.route('/' + TOKEN, methods=['POST'])
+def getMessage():
+    json_string = request.get_data().decode('utf-8')
+    update = telebot.types.Update.de_json(json_string)
+    bot.process_new_updates([update])
+    return "!", 200
+
+
+@server.route("/")
+def webhook():
+    bot.remove_webhook()
+    bot.set_webhook(url='https://polar-tor-49578.herokuapp.com/' + TOKEN)
+    #bot.set_webhook(url='http://192.168.43.124:5000/' + TOKEN)
+    return "!", 200
+
+
+if __name__ == "__main__":
+    server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
