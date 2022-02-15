@@ -26,7 +26,7 @@ def return_image(original_image, style_image_path, bot, id):
     class VGG(nn.Module):
         def __init__(self):
             super(VGG, self).__init__()
-            self.req_features = ['0', '1', '2']
+            self.req_features = ['5', '12', '21', '27']
             self.model = torch.load('model.pth')
 
         def forward(self, x):
@@ -60,7 +60,7 @@ def return_image(original_image, style_image_path, bot, id):
 
     model = VGG().to(device).eval()
 
-    epoch = 80
+    epoch = 150
     lr = 0.005
     alpha = 8
     beta = 7000
